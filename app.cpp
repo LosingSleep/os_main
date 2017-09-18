@@ -373,3 +373,148 @@ void CheckHead(int x, int y){  //检查蛇头移动后的位置情况
         }
     }
 }
+
+/*************************************** PUSHBOX GAME *************************************************/
+
+const int ROWS = 10;
+const int COLUMNS = 12; //之所以定义为11，是因为字符串的尾部的\0
+
+void DrawMap();
+void SwapXY(int *x1, int *y1, int *x2, int *y2);
+int IsLose(int boxPositionX, int boxPositionY, char condition); //判断是否已输
+void PushBox(int *boxPositionX, int *boxPositionY, int *manPositionX, int *manPositionY); //接收用户的输入，然后做出相应的处理
+
+const char wall = '#';
+const char road = ' ';
+const char punch = 'X';
+const char man = 'O';
+
+void Clear(){
+    int i = 0;
+    for(i = 0; i < 30; i++)
+        printf("\n");
+}
+
+char pushBoxMap[10][12] =
+{
+    {'#','#','#','#','#','#','#','#','#','#','\n','\0'},
+    {'#','O',' ','#','#','#','#',' ',' ','#','\n','\0'},
+    {'#',' ','X','#','#','#','#',' ',' ','#','\n','\0'},
+    {'#',' ',' ',' ',' ',' ',' ',' ',' ','#','\n','\0'},
+    {'#','#','#','#','#','#',' ',' ',' ','#','\n','\0'},
+    {'#',' ',' ','#','#','#','#',' ',' ','#','\n','\0'},
+    {'#',' ',' ',' ',' ',' ',' ',' ',' ','#','\n','\0'},
+    {'#',' ',' ',' ','#','#','#','#','#','#','\n','\0'},
+    {'#',' ',' ',' ',' ',' ',' ',' ',' ',' ','\n','\0'},
+    {'#','#','#','#','#','#','#','#','#','#','\n','\0'},
+};
+
+
+int main(){
+    int boxPositionX,boxPositionY;
+    int manPositionX,manPositionY;
+    
+    //定义地图的出口，也就是箱子到达此处就赢了
+    int winPositionX = ROWS - 2;
+    int winPositionY = COLUMNS - 3;
+    int IsWin = 0;
+    manPositionX = 1, manPositionY = 1;
+    boxPositionX = 2, boxPositionY = 2;
+    
+    DrawMap();
+    
+    while(!IsWin){
+        int boxNextPositionX = boxPositionX;
+        int boxNextPositionY = boxPositionY;
+        int manNextPositionX = manPositionX;
+        int manNextPositionY = manPositionY;
+        //获取用户的输入
+        PushBox(&boxNextPositionX, &boxNextPositionY, &manNextPositionX, &manNextPositionY);
+        //
+        Clear();
+        
+        //这里处理走之后的效果 TODO：
+        if(pushBoxMap[boxNextPositionX][boxNextPositionY] == road
+           && pushBoxMap[manNextPositionX][manNextPositionY] == punch) {
+            SwapXY(&boxPositionX, &boxPositionY, &boxNextPositionX, &boxNextPositionY);
+            SwapXY(&manPositionX, &manPositionY, &manNextPositionX, &manNextPositionY);
+            
+        }
+        if(pushBoxMap[manNextPositionX][manNextPositionY] == road){
+            SwapXY(&manPositionX, &manPositionY, &manNextPositionX, &manNextPositionY);
+            
+        }
+        
+        DrawMap();
+        
+        if(boxPositionX == winPositionX && boxPositionY == winPositionY){
+            printf("You Are Win!\n");
+            IsWin = 1;
+            
+        }
+        if(IsLose(boxPositionX, boxPositionY, wall)){
+            printf("You Are Lose!\n");
+            break;
+        }
+    }
+    return 0;
+}
+
+void DrawMap(){
+    for(int i = 0; i < ROWS; i++){
+        for (int j = 0; j < COLUMNS; j++) {
+            printf("%c", pushBoxMap[i][j]);
+        }
+    }
+}
+
+void SwapXY(int *x1, int *y1, int *x2, int *y2){
+    char temp = pushBoxMap[*x1][*y1];
+    pushBoxMap[*x1][*y1] = pushBoxMap[*x2][*y2];
+    pushBoxMap[*x2][*y2] = temp;
+    
+    *x1 = *x2;
+    *y1 = *y2;
+}
+
+int IsLose(int boxPositionX, int boxPositionY, char condition){
+    if((pushBoxMap[boxPositionX + 1][boxPositionY] == condition && pushBoxMap[boxPositionX][boxPositionY - 1] == condition)
+       ||(pushBoxMap[boxPositionX - 1][boxPositionY] == condition && pushBoxMap[boxPositionX][boxPositionY - 1] == condition)
+       ||(pushBoxMap[boxPositionX - 1][boxPositionY] == condition && pushBoxMap[boxPositionX][boxPositionY + 1] == condition)
+       ||(pushBoxMap[boxPositionX + 1][boxPositionY] == condition && pushBoxMap[boxPositionX][boxPositionY + 1] == condition)
+       ){
+        return 1;
+    }
+    return 0;
+}
+
+void PushBox(int *boxPositionX, int *boxPositionY, int *manPositionX, int *manPositionY){
+    char direction;
+    printf("Please input a direction:([w,a,s,d]stands for[up, left, down, right])\n");
+    read(0, direction, 1);
+    switch(direction){
+        case 'W':
+        case 'w':
+            (*manPositionX)--;
+            (*boxPositionX)--;
+            break;
+        case 'A':
+        case 'a':
+            (*manPositionY)--;
+            (*boxPositionY)--;
+            break;
+        case 'S':
+        case 's':
+            (*manPositionX)++;
+            (*boxPositionX)++;
+            break;
+        case 'D':
+        case 'd':
+            (*manPositionY)++;
+            (*boxPositionY)++;
+            break;
+        default:
+            break;
+            //DO NOTHING:
+    }
+}
